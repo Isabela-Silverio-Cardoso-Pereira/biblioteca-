@@ -1,8 +1,6 @@
 #include <iostream>
-
 #include <string>
-
-#include <cstdlib>
+#include <fstream>
 
 using namespace std;
 
@@ -36,6 +34,8 @@ struct Usuario {
   int devolucao;
   string nome;
   string email;
+  int livrosEmprestados[10];
+  int numLivrosEmprestados = 0;
 };
 
 struct Editora {
@@ -184,7 +184,7 @@ void pesquisarLivroTitulo(string & titulo) {
   }
   cout << "Livro nao encontrado." << endl;
 }
-
+//PESQUISAR PELA MATRICULA
 void pesquisarMatricula(int matricula) {
   for (int i = 0; i < TAMANHO_TABELA_HASH; i++) {
     No < Livro > * aux = tabelaHash < Livro > [i];
@@ -199,6 +199,7 @@ void pesquisarMatricula(int matricula) {
   cout << "Livro nao encontrado." << endl;
 }
 
+//PESQUISAR PELO AUTOR
 void pesquisarAutor(string autor) {
   bool encontrado = false;
   for (int i = 0; i < TAMANHO_TABELA_HASH; i++) {
@@ -208,7 +209,7 @@ void pesquisarAutor(string autor) {
         if (aux -> item.autores[j].nome == autor) {
           cout << "Livro encontrado: " << aux -> item.titulo << ", Ano: " << aux -> item.ano << ", Matricula: " << aux -> item.matricula << endl;
           encontrado = true;
-          break; // Se encontrou, não precisa continuar verificando os autores do mesmo livro
+          break;
         }
       }
       aux = aux -> proximo;
@@ -219,6 +220,7 @@ void pesquisarAutor(string autor) {
   }
 }
 
+//PESQUISAR PELA EDITORA
 void pesquisarEditora(string editora) {
   bool encontrado = false;
   for (int i = 0; i < TAMANHO_TABELA_HASH; i++) {
@@ -235,6 +237,7 @@ void pesquisarEditora(string editora) {
     cout << "Editora não encontrada." << endl;
   }
 }
+//PESQUISA PELO GENERO
 void pesquisarGenero(string genero) {
   bool encontrado = false;
   for (int i = 0; i < TAMANHO_TABELA_HASH; i++) {
@@ -254,6 +257,351 @@ void pesquisarGenero(string genero) {
   }
 }
 
+//CADASTRANDO AUTORES
+void cadastrarAutor() {
+  Autor novoAutor;
+  cout << "Digite a matricula do autor: ";
+  cin >> novoAutor.matricula;
+  cin.ignore();
+  cout << "Digite o nome do autor: ";
+  getline(cin, novoAutor.nome);
+  cout << "Digite a quantidade de livros do autor: ";
+  cin >> novoAutor.quantdLivros;
+
+  inserirItem(novoAutor);
+  cout << "Autor cadastrado com sucesso!" << endl;
+}
+//CADASTRANDO LIVROS
+void cadastrarLivro() {
+  Livro novoLivro;
+  cout << "Digite a matricula do livro: ";
+  cin >> novoLivro.matricula;
+  cin.ignore();
+
+  cout << "Digite o titulo do livro: ";
+  getline(cin, novoLivro.titulo);
+
+  cout << "Digite o ano de publicação: ";
+  cin >> novoLivro.ano;
+  cin.ignore();
+
+  cout << "Digite o genero do livro: ";
+  getline(cin, novoLivro.genero);
+
+  cout << "Digite o nome da editora: ";
+  getline(cin, novoLivro.editora);
+
+  novoLivro.numAutores = 0;
+
+  inserirItem(novoLivro);
+  cout << "Livro cadastrado com sucesso!" << endl;
+}
+
+void cadastrarRevista() {
+  Revista novaRevista;
+  cout << "Digite a matricula da revista: ";
+  cin >> novaRevista.matricula;
+  cin.ignore();
+
+  cout << "Digite o titulo da revista: ";
+  getline(cin, novaRevista.titulo);
+
+  cout << "Digite o ano de publicação: ";
+  cin >> novaRevista.ano;
+
+  cout << "Digite a edição da revista: ";
+  cin >> novaRevista.edicao;
+
+  inserirItem(novaRevista);
+  cout << "Revista cadastrada com sucesso!" << endl;
+
+}
+void cadastrarEditora() {
+  Editora novaEditora;
+  cout << "Digite a matricula da editora: ";
+  cin >> novaEditora.matricula;
+  cin.ignore();
+
+  cout << "Digite o nome da editora: ";
+  getline(cin, novaEditora.nome);
+
+  cout << "Digite o endereco da editora: ";
+  getline(cin, novaEditora.endereco);
+
+  cout << "Digite o ano de fundacao da editora: ";
+  cin >> novaEditora.anoFundacao;
+
+  inserirItem(novaEditora);
+  cout << "Editora cadastrada com sucesso!" << endl;
+}
+void cadastrarUsuario() {
+  Usuario novoUsuario;
+  cout << "Digite a matricula do usuario: ";
+  cin >> novoUsuario.matricula;
+  cin.ignore();
+
+  cout << "Digite o nome do usuario: ";
+  getline(cin, novoUsuario.nome);
+
+  cout << "Digite o email do usuario: ";
+  getline(cin, novoUsuario.email);
+
+  cout << "Digite o tempo de devolucao (dias): ";
+  cin >> novoUsuario.devolucao;
+
+  novoUsuario.numLivrosEmprestados = 0;
+
+  inserirItem(novoUsuario);
+  cout << "Usuario cadastrado com sucesso!" << endl;
+
+}
+bool removerAutorDoLivro(int matriculaLivro, int matriculaAutor) {
+  Livro * livro = buscarItem < Livro > (matriculaLivro);
+  if (livro != nullptr) {
+    for (int i = 0; i < livro -> numAutores; ++i) {
+      if (livro -> autores[i].matricula == matriculaAutor) {
+        // Remove o autor, deslocando os autores restantes
+        for (int j = i; j < livro -> numAutores - 1; ++j) {
+          livro -> autores[j] = livro -> autores[j + 1];
+        }
+        livro -> numAutores--;
+        cout << "Autor removido do livro." << endl;
+        return true;
+      }
+    }
+    cout << "Autor não encontrado no livro." << endl;
+  } else {
+    cout << "Livro não encontrado." << endl;
+  }
+  return false;
+}
+bool removerEditora(int matricula) {
+  int indice = funcaoHash(matricula);
+  No < Editora > * auxP = tabelaHash < Editora > [indice];
+  No < Editora > * auxA = nullptr;
+
+  while (auxP != nullptr) {
+    if (auxP -> item.matricula == matricula) {
+      if (auxA == nullptr) {
+        tabelaHash < Editora > [indice] = auxP -> proximo;
+      } else {
+        auxA -> proximo = auxP -> proximo;
+      }
+      delete auxP;
+      cout << "Editora removida com sucesso." << endl;
+      return true;
+    }
+    auxA = auxP;
+    auxP = auxP -> proximo;
+  }
+
+  cout << "Editora não encontrada." << endl;
+  return false;
+}
+void alterarAutor(int matricula, string novoNome, int novaQuantidadeLivros) {
+  Autor * autor = buscarItem < Autor > (matricula);
+  if (autor != nullptr) {
+    autor -> nome = novoNome;
+    autor -> quantdLivros = novaQuantidadeLivros;
+    cout << "Autor atualizado com sucesso." << endl;
+  } else {
+    cout << "Autor não encontrado." << endl;
+  }
+}
+void alterarEditora(int matricula) {
+  Editora * editora = buscarItem < Editora > (matricula);
+  if (editora != nullptr) {
+    cout << "Novo nome (atual: " << editora -> nome << "): ";
+    string novoNome;
+    getline(cin, novoNome);
+    if (!novoNome.empty()) editora -> nome = novoNome;
+
+    cout << "Novo endereco (atual: " << editora -> endereco << "): ";
+    string novoEndereco;
+    getline(cin, novoEndereco);
+    if (!novoEndereco.empty()) editora -> endereco = novoEndereco;
+
+    cout << "Novo ano de fundacao (atual: " << editora -> anoFundacao << "): ";
+    int novoAnoFundacao;
+    cin >> novoAnoFundacao;
+    if (novoAnoFundacao > 0) editora -> anoFundacao = novoAnoFundacao;
+    cin.ignore();
+
+    cout << "Editora atualizada com sucesso." << endl;
+  } else {
+    cout << "Editora não encontrada." << endl;
+  }
+}
+bool emprestarLivro(int matriculaUsuario, int matriculaLivro) {
+  Usuario * usuario = buscarItem < Usuario > (matriculaUsuario);
+  Livro * livro = buscarItem < Livro > (matriculaLivro);
+
+  if (usuario == nullptr) {
+    cout << "Usuário não encontrado." << endl;
+    return false;
+  }
+
+  if (livro == nullptr) {
+    cout << "Livro não encontrado." << endl;
+    return false;
+  }
+
+  usuario -> livrosEmprestados[usuario -> numLivrosEmprestados++] = matriculaLivro;
+  cout << "Livro emprestado com sucesso por 7 dias!" << endl;
+  return true;
+}
+void relatorioLivrosPorAutor(string autorNome) {
+  cout << "Relatório de Livros por Autor: " << autorNome << endl;
+  for (int i = 0; i < TAMANHO_TABELA_HASH; i++) {
+    No < Livro > * aux = tabelaHash < Livro > [i];
+    while (aux != nullptr) {
+      for (int j = 0; j < aux -> item.numAutores; j++) {
+        if (aux -> item.autores[j].nome == autorNome) {
+          cout << "Livro encontrado: " << aux -> item.titulo << ", Ano: " << aux -> item.ano << ", Matricula: " << aux -> item.matricula << endl;
+        }
+      }
+      aux = aux -> proximo;
+    }
+  }
+}
+void relatorioLivrosPorEditora(string editoraNome) {
+  cout << "Relatório de Livros por Editora: " << editoraNome << endl;
+  for (int i = 0; i < TAMANHO_TABELA_HASH; i++) {
+    No < Livro > * aux = tabelaHash < Livro > [i];
+    while (aux != nullptr) {
+      if (aux -> item.editora == editoraNome) {
+        cout << "Livro encontrado: " << aux -> item.titulo << ", Ano: " << aux -> item.ano << ", Matricula: " << aux -> item.matricula << endl;
+      }
+      aux = aux -> proximo;
+    }
+  }
+}
+void relatorioLivrosPorGenero(string genero) {
+  cout << "Relatório de Livros por Gênero: " << genero << endl;
+  for (int i = 0; i < TAMANHO_TABELA_HASH; i++) {
+    No < Livro > * aux = tabelaHash < Livro > [i];
+    while (aux != nullptr) {
+      if (aux -> item.genero == genero) {
+        cout << "Livro encontrado: " << aux -> item.titulo << ", Ano: " << aux -> item.ano << ", Matricula: " << aux -> item.matricula << endl;
+      }
+      aux = aux -> proximo;
+    }
+  }
+}
+void historicoRetiradas(int matriculaUsuario) {
+  Usuario * usuario = buscarItem < Usuario > (matriculaUsuario);
+  if (usuario != nullptr) {
+    cout << "Histórico de Retiradas para o usuário: " << usuario -> nome << endl;
+    for (int i = 0; i < usuario -> numLivrosEmprestados; i++) {
+      Livro * livro = buscarItem < Livro > (usuario -> livrosEmprestados[i]);
+      if (livro != nullptr) {
+        cout << "Livro: " << livro -> titulo << ", Ano: " << livro -> ano << ", Matricula: " << livro -> matricula << endl;
+      }
+    }
+  } else {
+    cout << "Usuário não encontrado." << endl;
+  }
+}
+void relatorioLivrosAtrasados() {
+  cout << "Relatório de Livros em Atraso:" << endl;
+  for (int i = 0; i < TAMANHO_TABELA_HASH; i++) {
+    No < Usuario > * auxUsuario = tabelaHash < Usuario > [i];
+    while (auxUsuario != nullptr) {
+      for (int j = 0; j < auxUsuario -> item.numLivrosEmprestados; j++) {
+        if (auxUsuario -> item.devolucao < 0) {
+          cout << "Livro matricula: " << auxUsuario -> item.livrosEmprestados[j] << " esta atrasado." << endl;
+        }
+      }
+      auxUsuario = auxUsuario -> proximo;
+    }
+  }
+}
+void salvarAutores() {
+  ofstream arquivo("autores.txt");
+  for (int i = 0; i < TAMANHO_TABELA_HASH; i++) {
+    No < Autor > * aux = tabelaHash < Autor > [i];
+    while (aux != nullptr) {
+      arquivo << aux -> item.matricula << ";" <<
+        aux -> item.nome << ";" <<
+        aux -> item.quantdLivros << endl;
+      aux = aux -> proximo;
+    }
+  }
+  arquivo.close();
+}
+
+void salvarLivros() {
+  ofstream arquivo("livros.txt");
+  for (int i = 0; i < TAMANHO_TABELA_HASH; i++) {
+    No < Livro > * aux = tabelaHash < Livro > [i];
+    while (aux != nullptr) {
+      arquivo << aux -> item.matricula << ";" <<
+        aux -> item.titulo << ";" <<
+        aux -> item.ano << ";" <<
+        aux -> item.genero << ";" <<
+        aux -> item.editora << ";" <<
+        aux -> item.numAutores;
+      for (int j = 0; j < aux -> item.numAutores; j++) {
+        arquivo << ";" << aux -> item.autores[j].matricula <<
+          ";" << aux -> item.autores[j].nome <<
+          ";" << aux -> item.autores[j].quantdLivros;
+      }
+      arquivo << endl;
+      aux = aux -> proximo;
+    }
+  }
+  arquivo.close();
+}
+
+void salvarRevistas() {
+  ofstream arquivo("revistas.txt");
+  for (int i = 0; i < TAMANHO_TABELA_HASH; i++) {
+    No < Revista > * aux = tabelaHash < Revista > [i];
+    while (aux != nullptr) {
+      arquivo << aux -> item.matricula << ";" <<
+        aux -> item.titulo << ";" <<
+        aux -> item.ano << ";" <<
+        aux -> item.edicao << endl;
+      aux = aux -> proximo;
+    }
+  }
+  arquivo.close();
+}
+
+void salvarUsuarios() {
+  ofstream arquivo("usuarios.txt");
+  for (int i = 0; i < TAMANHO_TABELA_HASH; i++) {
+    No < Usuario > * aux = tabelaHash < Usuario > [i];
+    while (aux != nullptr) {
+      arquivo << aux -> item.matricula << ";" <<
+        aux -> item.nome << ";" <<
+        aux -> item.email << ";" <<
+        aux -> item.devolucao << ";" <<
+        aux -> item.numLivrosEmprestados;
+      for (int j = 0; j < aux -> item.numLivrosEmprestados; j++) {
+        arquivo << ";" << aux -> item.livrosEmprestados[j];
+      }
+      arquivo << endl;
+      aux = aux -> proximo;
+    }
+  }
+  arquivo.close();
+}
+
+void salvarEditoras() {
+  ofstream arquivo("editoras.txt");
+  for (int i = 0; i < TAMANHO_TABELA_HASH; i++) {
+    No < Editora > * aux = tabelaHash < Editora > [i];
+    while (aux != nullptr) {
+      arquivo << aux -> item.matricula << ";" <<
+        aux -> item.nome << ";" <<
+        aux -> item.endereco << ";" <<
+        aux -> item.anoFundacao << endl;
+      aux = aux -> proximo;
+    }
+  }
+  arquivo.close();
+}
 void menu() {
   int opcao;
   do {
@@ -264,6 +612,8 @@ void menu() {
     cout << "2. Buscar" << endl;
     cout << "3. Remover" << endl;
     cout << "4. Alterar" << endl;
+    cout << "5. emprestar" << endl;
+    cout << "6. relatorios" << endl;
     cout << "0. Sair" << endl;
     cin >> opcao;
     cin.ignore();
@@ -282,19 +632,19 @@ void menu() {
 
       switch (escolha) {
       case 1:
-        // Chamar função para incluir novos autores
+        cadastrarAutor();
         break;
       case 2:
-        // Chamar função para cadastrar novo livro
+        cadastrarLivro();
         break;
       case 3:
-        // Chamar função para cadastrar nova revista
+        cadastrarRevista();
         break;
       case 4:
-        // Chamar função para cadastrar editora
+        cadastrarEditora();
         break;
       case 5:
-        // Chamar função para cadastrar usuário
+        cadastrarUsuario();
         break;
       default:
         cout << "Opcao invalida! Tente novamente." << endl;
@@ -303,7 +653,6 @@ void menu() {
     }
     case 2: {
 
-      // Opções de busca
       cout << "1 - Buscar por matricula" << endl;
       cout << "2 - Buscar por titulo" << endl;
       cout << "3 - Buscar por autor" << endl;
@@ -361,35 +710,133 @@ void menu() {
       }
     }
     case 3: {
-      // Opções para remover
-      cout << "1 - Remover autor" << endl;
-      cout << "2 - Remover livro" << endl;
-      cout << "3 - Remover revista" << endl;
-      cout << "4 - Remover editora" << endl;
+      cout << "1 - Remover autor de um livro" << endl;
+      cout << "2 - Remover editora" << endl;
 
       int removerEscolha;
       cout << "Escolha uma opcao: ";
       cin >> removerEscolha;
 
-      // Chamar funções de remoção conforme a escolha
+      switch (removerEscolha) {
+      case 1: {
+        int matriculaLivro, matriculaAutor;
+        cout << "Digite a matricula do livro: ";
+        cin >> matriculaLivro;
+        cout << "Digite a matricula do autor a ser removido: ";
+        cin >> matriculaAutor;
+        removerAutorDoLivro(matriculaLivro, matriculaAutor);
+        break;
+      }
+      case 2: {
+        int matriculaEditora;
+        cout << "Digite a matricula da editora a ser removida: ";
+        cin >> matriculaEditora;
+        removerEditora(matriculaEditora);
+        break;
+      }
+      }
       break;
     }
     case 4: {
-      // Opções para alterar
       cout << "1 - Alterar autor" << endl;
-      cout << "2 - Alterar livro" << endl;
-      cout << "3 - Alterar revista" << endl;
-      cout << "4 - Alterar editora" << endl;
+      cout << "2 - Alterar editora" << endl;
 
       int alterarEscolha;
       cout << "Escolha uma opcao: ";
       cin >> alterarEscolha;
+      switch (alterarEscolha) {
+      case 1: {
+        int matricula;
+        string novoNome;
+        int novaQuantidadeLivros;
 
-      // Chamar funções de alteração conforme a escolha
+        cout << "Digite a matricula do autor: ";
+        cin >> matricula;
+        cin.ignore();
+        cout << "Novo nome: ";
+        getline(cin, novoNome);
+        cout << "Nova quantidade de livros: ";
+        cin >> novaQuantidadeLivros;
+
+        alterarAutor(matricula, novoNome, novaQuantidadeLivros);
+        break;
+      }
+      case 2: {
+        int matricula;
+        cout << "Digite a matricula da editora: ";
+        cin >> matricula;
+        cin.ignore();
+        alterarEditora(matricula);
+        break;
+      }
+
+      }
+
+      break;
+    }
+    case 5: {
+      int matriculaUsuario, matriculaLivro;
+      cout << "Digite a matrícula do usuario: ";
+      cin >> matriculaUsuario;
+      cout << "Digite a matricula do livro: ";
+      cin >> matriculaLivro;
+      emprestarLivro(matriculaUsuario, matriculaLivro);
+      break;
+    }
+    case 6: {
+      cout << "1 - Relatorio de Livros por Autor" << endl;
+      cout << "2 - Relatorio de Livros por Editora" << endl;
+      cout << "3 - Relatorio de Livros por Gênero" << endl;
+      cout << "4 - Historico de Retiradas de um Usuario" << endl;
+      cout << "5 - livros e revistas em atraso" << endl;
+      int relatorioEscolha;
+      cin >> relatorioEscolha;
+      cin.ignore();
+      switch (relatorioEscolha) {
+      case 1: {
+        string autor;
+        cout << "Digite o nome do autor: ";
+        getline(cin, autor);
+        relatorioLivrosPorAutor(autor);
+        break;
+      }
+      case 2: {
+        string editora;
+        cout << "Digite o nome da editora: ";
+        getline(cin, editora);
+        relatorioLivrosPorEditora(editora);
+        break;
+      }
+      case 3: {
+        string genero;
+        cout << "Digite o genero do livro: ";
+        getline(cin, genero);
+        relatorioLivrosPorGenero(genero);
+        break;
+      }
+      case 4: {
+        int matriculaUsuario;
+        cout << "Digite a matricula do usuario: ";
+        cin >> matriculaUsuario;
+        historicoRetiradas(matriculaUsuario);
+        break;
+      }
+      case 5: {
+        relatorioLivrosAtrasados();
+        break;
+      }
+
+      }
+
       break;
     }
     case 0:
-      cout << "Saindo do sistema..." << endl;
+      cout << "..." << endl;
+      salvarAutores();
+      salvarLivros();
+      salvarRevistas();
+      salvarUsuarios();
+      salvarEditoras();
       return;
     default:
       cout << "Opcao invalida! Tente novamente." << endl;
@@ -401,11 +848,29 @@ int main() {
   inicializarTabela < Livro > ();
 
   // Inserir Livros
-  Autor a1 = {201,"Autor Um",5};
-  Autor a2 = {202,"Autor Dois",3};
+  Autor a1 = {
+    201,
+    "Autor Um",
+    5
+  };
+  Autor a2 = {
+    202,
+    "Autor Dois",
+    3
+  };
 
   Livro l1 = {
-    101,"Como ficar rico",2010,"Auto-Ajuda",{a1,a2},2,"Editora Exemplo"};
+    101,
+    "Como ficar rico",
+    2010,
+    "Auto-Ajuda",
+    {
+      a1,
+      a2
+    },
+    2,
+    "Editora Exemplo"
+  };
   inserirItem(l1);
   listarLivros();
   menu();
@@ -428,13 +893,6 @@ int main() {
 
   // Alterar Livro
   alterarLivro(111, "Bolsonaro: Uma historia de Amor e Golden Shower", 2021, "Romance");
-
-  // Adicionar autores ao livro
-  /* Autor a1 = {201, "Bolsonaro", 5};
-   Autor a2 = {202, "Marçal", 61};
-   Autor a3 = {203, "Primo-Rico", 6};
-   adicionarAutorAoLivro(102, a2);
-   adicionarAutorAoLivro(111, a1);*/
 
   return 0;
 }
